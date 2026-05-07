@@ -5,111 +5,111 @@ import { LoginForm, SignupForm } from "./AuthForms";
 
 export function Header({ onOpenAuth, isAuthenticated }) {
 
-  return (
-    <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
-      <div className="container mx-auto px-4 md:px-8 flex items-center justify-between h-16">
+    return (
+        <header className="bg-[#f7f8f8] border-b border-gray-200 shadow-sm sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+                {/* Logo */}
+                <Link to="/" className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">SM</span>
+                    </div>
+                    <span className="font-bold text-lg text-gray-900 hidden sm:block">
+                        Student Market Place
+                    </span>
+                </Link>
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">SM</span>
-          </div>
-          <span className="font-bold text-lg text-gray-900 hidden sm:block">
-            Student Market
-          </span>
-        </Link>
+                {/* Search Bar */}
+                <div className="hidden md:flex flex-1 mx-8 max-w-xl">
+                    <div className="w-full flex items-center border bg-white rounded-lg overflow-hidden">
+                        <input
+                            type="text"
+                            placeholder="Search for products, categories..."
+                            className="w-full px-4 py-2 outline-none text-sm"
+                        />
+                        <button className="bg-blue-600 px-4 py-2 text-white">
+                            <Search size={18} />
+                        </button>
+                    </div>
+                </div>
 
-        {/* Search Bar */}
-        <div className="hidden md:flex flex-1 mx-8 max-w-xl">
-          <div className="w-full flex items-center border rounded-lg overflow-hidden">
-            <input
-              type="text"
-              placeholder="Search for products, categories..."
-              className="w-full px-4 py-2 outline-none text-sm"
-            />
-            <button className="bg-blue-600 px-4 py-2 text-white">
-              <Search size={18} />
-            </button>
-          </div>
-        </div>
+                {/* Right Section */}
+                <div className="flex items-center gap-2 sm:gap-3">
 
-        {/* Right Section */}
-        <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Sell button — opens auth modal if not logged in */}
+                    {isAuthenticated ? (
+                        <Link
+                            to="/sell"
+                            className="inline-flex items-center gap-1 px-5 py-1.5 bg-white text-[#002f34] font-bold rounded-full border-[5px] border-t-[#ffce32] border-r-[#3a77ff] border-b-[#23e5db] border-l-[#ffce32] hover:shadow-md transition-all"
+                        >
 
-          {/* Sell button — opens auth modal if not logged in */}
-          {isAuthenticated ? (
-            <Link
-              to="/sell"
-              className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors"
-            >
-              + SELL
-            </Link>
-          ) : (
-            <button
-              onClick={() => onOpenAuth('signup', '/sell')}
-              className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors"
-            >
-              + SELL
-            </button>
-          )}
+                            + SELL
+                        </Link>
+                    ) : (
+                        <button
+                            onClick={() => onOpenAuth('signup', '/sell')}
+                            className="inline-flex items-center gap-1 px-5 py-1.5 bg-white text-[#002f34] font-bold rounded-full border-[5px] border-t-[#ffce32] border-r-[#3a77ff] border-b-[#23e5db] border-l-[#ffce32] hover:shadow-md transition-all"
+                        >
+                            + SELL
+                        </button>
+                    )}
 
-          {!isAuthenticated ? (
-            <>
-              <button
-                onClick={() => onOpenAuth('login')}
-                className="text-gray-700 text-sm font-medium hover:text-blue-600 transition-colors px-1"
-              >
-                Login
-              </button>
+                    {!isAuthenticated ? (
+                        <>
+                            <button
+                                onClick={() => onOpenAuth('login')}
+                                className="text-gray-700 text-sm font-medium hover:text-blue-600 transition-colors px-1"
+                            >
+                                Login
+                            </button>
 
-              <button
-                onClick={() => onOpenAuth('signup')}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-              >
-                Sign Up
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
-            >
-              <User size={16} />
-              <span className="hidden sm:inline">Profile</span>
-            </Link>
-          )}
-        </div>
-      </div>
+                            <button
+                                onClick={() => onOpenAuth('signup')}
+                                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                            >
+                                Sign Up
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            to="/profile"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                        >
+                            <User size={16} />
+                            <span className="hidden sm:inline">Profile</span>
+                        </Link>
+                    )}
+                </div>
+            </div>
 
-      {/* Mobile Search */}
-      <div className="md:hidden px-4 pb-3">
-        <div className="flex items-center border rounded-lg overflow-hidden">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full px-3 py-2 text-sm outline-none"
-          />
-          <button className="bg-blue-600 px-3 py-2 text-white">
-            <Search size={16} />
-          </button>
-        </div>
-      </div>
+            {/* Mobile Search */}
+            <div className="md:hidden px-4 pb-3">
+                <div className="flex items-center border rounded-lg overflow-hidden">
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        className="w-full px-3 py-2 text-sm outline-none"
+                    />
+                    <button className="bg-blue-600 px-3 py-2 text-white">
+                        <Search size={16} />
+                    </button>
+                </div>
+            </div>
 
-      {/* Categories Navbar */}
-      <div className="border-t border-gray-200 bg-white shadow-sm">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="flex items-center gap-6 overflow-x-auto py-2.5 no-scrollbar">
-            <span className="text-xs font-bold text-gray-900 whitespace-nowrap uppercase tracking-wider">Categories:</span>
-            <Link to="/browse" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">All items</Link>
-            <Link to="/browse?category=books" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Books</Link>
-            <Link to="/browse?category=electronics" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Electronics</Link>
-            <Link to="/browse?category=furniture" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Furniture</Link>
-            <Link to="/browse?category=dorm" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Dorm Essentials</Link>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+            {/* Categories Navbar */}
+            <div className="border-t border-gray-200 bg-white shadow-sm">
+                <div className="container mx-auto px-4 md:px-8">
+                    <div className="flex items-center gap-6 overflow-x-auto py-2.5 no-scrollbar">
+                        <span className="text-xs font-bold text-gray-900 whitespace-nowrap uppercase tracking-wider">Categories:</span>
+                        <Link to="/browse" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">All items</Link>
+                        <Link to="/browse?category=books" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Books</Link>
+                        <Link to="/browse?category=electronics" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Electronics</Link>
+                        <Link to="/browse?category=furniture" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Furniture</Link>
+                        <Link to="/browse?category=dorm" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Dorm Essentials</Link>
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
 }
 // ============ FOOTER COMPONENT ============
 
@@ -266,22 +266,22 @@ export default function AppLayout({ children }) {
             {authModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm bg-black/40 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative max-h-[90vh] overflow-y-auto">
-                        <button 
+                        <button
                             onClick={() => setAuthModal(null)}
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1"
                         >
                             <X size={24} />
                         </button>
-                        
+
                         {authModal === 'login' ? (
-                            <LoginForm 
-                                onSubmit={handleLoginSubmit} 
+                            <LoginForm
+                                onSubmit={handleLoginSubmit}
                                 onSuccess={handleAuthSuccess}
                                 onSwitchMode={() => setAuthModal('signup')}
                                 isModal={true}
                             />
                         ) : (
-                            <SignupForm 
+                            <SignupForm
                                 onSubmit={handleSignupSubmit}
                                 onSuccess={handleAuthSuccess}
                                 onSwitchMode={() => setAuthModal('login')}

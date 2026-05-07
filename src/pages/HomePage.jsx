@@ -63,7 +63,7 @@ export default function HomePage() {
                 <div className="container mx-auto px-4 md:px-8">
                     <div className="max-w-3xl">
                         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                            Buy & Sell with Your Campus Community
+                            Buy & Sell with Your Universities Community
                         </h1>
                         <p className="text-lg md:text-xl text-blue-100 mb-8">
                             Find affordable textbooks, electronics, furniture, and more from fellow students.
