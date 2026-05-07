@@ -1,154 +1,116 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, X, User } from "lucide-react";
+import { LoginForm, SignupForm } from "./AuthForms";
 
-// ============ HEADER COMPONENT ============
-export function Header() {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+export function Header({ onOpenAuth, isAuthenticated }) {
 
-    return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-            <div className="container mx-auto px-4 md:px-8 flex items-center justify-between h-16 md:h-20">
-                {/* Logo */}
-                <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">S</span>
-                    </div>
-                    <span className="hidden sm:inline font-bold text-lg text-gray-900">
-                        StudentHub
-                    </span>
-                </Link>
+  return (
+    <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
+      <div className="container mx-auto px-4 md:px-8 flex items-center justify-between h-16">
 
-                {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-8">
-                    <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                        Home
-                    </Link>
-                    <Link to="/browse" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                        Browse
-                    </Link>
-                    <Link to="/sell" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                        Sell
-                    </Link>
-                    {isAuthenticated && (
-                        <Link to="/my-listings" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                            My Listings
-                        </Link>
-                    )}
-                   
-                    
-                </nav>
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">SM</span>
+          </div>
+          <span className="font-bold text-lg text-gray-900 hidden sm:block">
+            Student Market
+          </span>
+        </Link>
 
-                {/* Right Section - Auth Buttons */}
-                <div className="flex items-center gap-4">
-                    {!isAuthenticated ? (
-                        <div className="hidden sm:flex items-center gap-3">
-                            <Link
-                                to="/login"
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
-                            >
-                                Login
-                            </Link>
-                            <Link
-                                to="/signup"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
-                            >
-                                Sign Up
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            >
-                                <span className="text-sm font-medium text-gray-700">Profile</span>
-                            </button>
+        {/* Search Bar */}
+        <div className="hidden md:flex flex-1 mx-8 max-w-xl">
+          <div className="w-full flex items-center border rounded-lg overflow-hidden">
+            <input
+              type="text"
+              placeholder="Search for products, categories..."
+              className="w-full px-4 py-2 outline-none text-sm"
+            />
+            <button className="bg-blue-600 px-4 py-2 text-white">
+              <Search size={18} />
+            </button>
+          </div>
+        </div>
 
-                            {isUserMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200">
-                                    <Link
-                                        to="/profile"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors rounded-t-lg"
-                                    >
-                                        My Profile
-                                    </Link>
-                                    <Link
-                                        to="/my-listings"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
-                                    >
-                                        My Listings
-                                    </Link>
-                                    <button
-                                        onClick={() => setIsUserMenuOpen(false)}
-                                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors rounded-b-lg"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+        {/* Right Section */}
+        <div className="flex items-center gap-2 sm:gap-3">
 
-                    {/* Mobile Menu Toggle */}
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                        {isMenuOpen ? (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        ) : (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        )}
-                    </button>
-                </div>
-            </div>
+          {/* Sell button — opens auth modal if not logged in */}
+          {isAuthenticated ? (
+            <Link
+              to="/sell"
+              className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors"
+            >
+              + SELL
+            </Link>
+          ) : (
+            <button
+              onClick={() => onOpenAuth('signup', '/sell')}
+              className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors"
+            >
+              + SELL
+            </button>
+          )}
 
-            {/* Mobile Navigation Menu */}
-            {isMenuOpen && (
-                <div className="md:hidden bg-white border-t border-gray-200">
-                    <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
-                        <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">
-                            Home
-                        </Link>
-                        <Link to="/browse" className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">
-                            Browse
-                        </Link>
-                        <Link to="/sell" className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">
-                            Sell
-                        </Link>
-                        {isAuthenticated && (
-                            <Link to="/my-listings" className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2">
-                                My Listings
-                            </Link>
-                        )}
+          {!isAuthenticated ? (
+            <>
+              <button
+                onClick={() => onOpenAuth('login')}
+                className="text-gray-700 text-sm font-medium hover:text-blue-600 transition-colors px-1"
+              >
+                Login
+              </button>
 
-                        {!isAuthenticated && (
-                            <div className="flex gap-2 mt-2">
-                                <Link to="/login" className="flex-1">
-                                    <button className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-center">
-                                        Login
-                                    </button>
-                                </Link>
-                                <Link to="/signup" className="flex-1">
-                                    <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-center">
-                                        Sign Up
-                                    </button>
-                                </Link>
-                            </div>
-                        )}
-                    </nav>
-                </div>
-            )}
-        </header>
-    );
+              <button
+                onClick={() => onOpenAuth('signup')}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                Sign Up
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+            >
+              <User size={16} />
+              <span className="hidden sm:inline">Profile</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Search */}
+      <div className="md:hidden px-4 pb-3">
+        <div className="flex items-center border rounded-lg overflow-hidden">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-full px-3 py-2 text-sm outline-none"
+          />
+          <button className="bg-blue-600 px-3 py-2 text-white">
+            <Search size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Categories Navbar */}
+      <div className="border-t border-gray-200 bg-white shadow-sm">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex items-center gap-6 overflow-x-auto py-2.5 no-scrollbar">
+            <span className="text-xs font-bold text-gray-900 whitespace-nowrap uppercase tracking-wider">Categories:</span>
+            <Link to="/browse" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">All items</Link>
+            <Link to="/browse?category=books" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Books</Link>
+            <Link to="/browse?category=electronics" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Electronics</Link>
+            <Link to="/browse?category=furniture" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Furniture</Link>
+            <Link to="/browse?category=dorm" className="text-sm font-medium text-gray-700 whitespace-nowrap hover:text-blue-600 transition-colors">Dorm Essentials</Link>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
 }
-
 // ============ FOOTER COMPONENT ============
 
 
@@ -203,9 +165,7 @@ export function Footer() {
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">
-                                    Safety Tips
-                                </a>
+                                <span className="text-gray-400 text-sm cursor-default">Safety Tips</span>
                             </li>
                         </ul>
                     </div>
@@ -245,12 +205,8 @@ export function Footer() {
                             © {currentYear} StudentHub. All rights reserved.
                         </p>
                         <div className="flex gap-6">
-                            <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">
-                                Privacy Policy
-                            </a>
-                            <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">
-                                Terms of Service
-                            </a>
+                            <span className="text-gray-400 text-sm cursor-default">Privacy Policy</span>
+                            <span className="text-gray-400 text-sm cursor-default">Terms of Service</span>
                         </div>
                     </div>
                 </div>
@@ -261,13 +217,80 @@ export function Footer() {
 
 // ============ MAIN APPLAYOUT COMPONENT ============
 export default function AppLayout({ children }) {
+    const navigate = useNavigate();
+    const [authModal, setAuthModal] = useState(null);
+    const [redirectAfterAuth, setRedirectAfterAuth] = useState('/profile');
+    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('user'));
+
+    // Open auth modal; optionally set where to redirect after success
+    const openAuth = (mode, redirectTo = '/profile') => {
+        setRedirectAfterAuth(redirectTo);
+        setAuthModal(mode);
+    };
+
+    useEffect(() => {
+        if (authModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [authModal]);
+
+    const handleLoginSubmit = async (email, password) => {
+        return new Promise((resolve) => setTimeout(resolve, 1000));
+    };
+
+    const handleSignupSubmit = async (data) => {
+        return new Promise((resolve) => setTimeout(resolve, 1000));
+    };
+
+    const handleAuthSuccess = (email) => {
+        localStorage.setItem('user', email);
+        setIsAuthenticated(true);
+        setAuthModal(null);
+        navigate(redirectAfterAuth);
+    };
+
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
-            <Header />
+        <div className="flex flex-col min-h-screen bg-gray-50 relative">
+            <Header onOpenAuth={openAuth} isAuthenticated={isAuthenticated} />
             <main className="flex-1">
                 {children}
             </main>
             <Footer />
+
+            {/* Auth Modal Overlay */}
+            {authModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm bg-black/40 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative max-h-[90vh] overflow-y-auto">
+                        <button 
+                            onClick={() => setAuthModal(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1"
+                        >
+                            <X size={24} />
+                        </button>
+                        
+                        {authModal === 'login' ? (
+                            <LoginForm 
+                                onSubmit={handleLoginSubmit} 
+                                onSuccess={handleAuthSuccess}
+                                onSwitchMode={() => setAuthModal('signup')}
+                                isModal={true}
+                            />
+                        ) : (
+                            <SignupForm 
+                                onSubmit={handleSignupSubmit}
+                                onSuccess={handleAuthSuccess}
+                                onSwitchMode={() => setAuthModal('login')}
+                                isModal={true}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

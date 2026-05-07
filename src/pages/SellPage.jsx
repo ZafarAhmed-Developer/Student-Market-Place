@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Alert } from '../components/Utilities';
 
 export default function SellPage() {
+    const navigate = useNavigate();
+    const [isAuthorized, setIsAuthorized] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -13,6 +16,32 @@ export default function SellPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const user = localStorage.getItem('user');
+        if (!user) {
+            setTimeout(() => navigate('/'), 2000);
+        } else {
+            setIsAuthorized(true);
+        }
+    }, [navigate]);
+
+    if (!isAuthorized) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center bg-white rounded-xl shadow-sm border border-gray-100 p-10 max-w-sm mx-4">
+                    <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-9a3 3 0 100-6 3 3 0 000 6z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Login Required</h2>
+                    <p className="text-gray-500 text-sm mb-1">You need an account to sell items.</p>
+                    <p className="text-gray-400 text-xs">Redirecting you back…</p>
+                </div>
+            </div>
+        );
+    }
 
     const categories = [
         { value: 'books', label: 'Books & Textbooks' },

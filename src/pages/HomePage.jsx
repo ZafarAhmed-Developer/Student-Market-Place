@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { FilterPanel } from '../components/SearchComponents';
 import ProductGrid from '../components/ProductGrid';
 
 export default function HomePage() {
-    const [searchValue, setSearchValue] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
     const [favorites, setFavorites] = useState([]);
 
     const mockProducts = [
@@ -46,22 +43,18 @@ export default function HomePage() {
         },
     ];
 
-    const categories = [
-        { value: 'books', label: 'Books' },
-        { value: 'electronics', label: 'Electronics' },
-        { value: 'furniture', label: 'Furniture' },
-        { value: 'dorm', label: 'Dorm Essentials' },
-    ];
 
-    const handleFavoriteToggle = (id) => {
-        setFavorites((prev) =>
-            prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
-        );
-    };
 
-    const handleSearch = () => {
-        console.log('Search:', searchValue, 'Category:', selectedCategory);
-    };
+  const handleFavoriteToggle = (id) => {
+    setFavorites((prev) =>
+      prev.includes(id)
+        ? prev.filter((fav) => fav !== id)
+        : [...prev, id]
+    );
+  };
+
+
+    
 
     return (
         <>
@@ -79,19 +72,7 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Search & Filter Section */}
-            <section className="bg-gray-50 py-8 md:py-12">
-                <div className="container mx-auto px-4 md:px-8">
-                    <FilterPanel
-                        searchValue={searchValue}
-                        onSearchChange={setSearchValue}
-                        selectedCategory={selectedCategory}
-                        onCategoryChange={setSelectedCategory}
-                        categories={categories}
-                        onSearch={handleSearch}
-                    />
-                </div>
-            </section>
+
 
             {/* Products Section */}
             <section className="py-12 md:py-16">

@@ -7,6 +7,7 @@ import SignupPage from './pages/SignupPage';
 import SellPage from './pages/SellPage';
 import MyListingsPage from './pages/MyListingsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/sell" element={<SellPage />} />
           <Route path="/my-listings" element={<MyListingsPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </AppLayout>
     </Router>

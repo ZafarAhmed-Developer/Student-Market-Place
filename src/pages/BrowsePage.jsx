@@ -1,12 +1,31 @@
-import { useState } from 'react';
-import { FilterPanel } from '../components/SearchComponents';
+import { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import ProductGrid from '../components/ProductGrid';
 
 export default function BrowsePage() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchValue, setSearchValue] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
     const [favorites, setFavorites] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const cat = searchParams.get('category');
+        if (cat) {
+            setSelectedCategory(cat);
+        } else {
+            setSelectedCategory('');
+        }
+    }, [searchParams]);
+
+    const handleCategoryChange = (val) => {
+        setSelectedCategory(val);
+        if (val) {
+            setSearchParams({ category: val });
+        } else {
+            setSearchParams({});
+        }
+    };
 
     const mockProducts = [
         {
@@ -51,38 +70,43 @@ export default function BrowsePage() {
         );
     };
 
-    const handleSearch = () => {
-        setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 500);
-    };
-
     const filteredProducts = mockProducts.filter((product) => {
-        const matchesSearch = product.title.toLowerCase().includes(searchValue.toLowerCase());
         const matchesCategory = !selectedCategory || product.category.toLowerCase() === selectedCategory;
-        return matchesSearch && matchesCategory;
+        return matchesCategory;
     });
+
+    const categoryLabels = {
+        books: 'Books',
+        electronics: 'Electronics',
+        furniture: 'Furniture',
+        dorm: 'Dorm Essentials',
+    };
 
     return (
         <>
             <section className="bg-white border-b border-gray-200 py-8">
                 <div className="container mx-auto px-4 md:px-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Browse Items</h1>
-                    <p className="text-gray-600">Showing {filteredProducts.length} items</p>
-                </div>
-            </section>
-
-            <section className="bg-gray-50 py-8 md:py-12">
-                <div className="container mx-auto px-4 md:px-8">
-                    <FilterPanel
-                        searchValue={searchValue}
-                        onSearchChange={setSearchValue}
-                        selectedCategory={selectedCategory}
-                        onCategoryChange={setSelectedCategory}
-                        categories={categories}
-                        onSearch={handleSearch}
-                    />
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                        {selectedCategory ? (
+                            <>
+                                <span className="text-gray-500 text-sm">Filtered by:</span>
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                    {categoryLabels[selectedCategory] || selectedCategory}
+                                    <button
+                                        onClick={() => handleCategoryChange('')}
+                                        className="ml-1 text-blue-500 hover:text-blue-800 font-bold"
+                                        aria-label="Clear filter"
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                                <span className="text-gray-400 text-sm">{filteredProducts.length} items</span>
+                            </>
+                        ) : (
+                            <span className="text-gray-500 text-sm">Showing all {filteredProducts.length} items — select a category above to filter</span>
+                        )}
+                    </div>
                 </div>
             </section>
 

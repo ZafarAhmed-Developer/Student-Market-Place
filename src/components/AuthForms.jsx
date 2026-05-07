@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
+// ================= ALERT BOX =================
 function AlertBox({ type, message }) {
   const bgColor = type === 'error' ? 'bg-red-50' : 'bg-green-50';
   const textColor = type === 'error' ? 'text-red-700' : 'text-green-700';
@@ -13,11 +14,42 @@ function AlertBox({ type, message }) {
   );
 }
 
-export function LoginForm({ onSubmit, isLoading = false, error }) {
+// ================= EYE ICON =================
+function EyeToggle({ show }) {
+  return show ? (
+    // Eye OFF
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeWidth={2} d="M3 3l18 18" />
+      <path strokeWidth={2} d="M10.58 10.58A3 3 0 0013.42 13.42M9.88 4.24A9.956 9.956 0 0112 4c5 0 9 4 10 8a9.96 9.96 0 01-4.24 5.38M6.53 6.53A9.953 9.953 0 002 12c1 4 5 8 10 8a9.95 9.95 0 005.47-1.53" />
+    </svg>
+  ) : (
+    // Eye ON
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeWidth={2} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+      <circle cx="12" cy="12" r="3" strokeWidth={2} />
+    </svg>
+  );
+}
+
+// ================= LOGIN FORM =================
+export function LoginForm({ onSubmit, onSuccess, onSwitchMode, isModal = false, isLoading: externalLoading = false, error }) {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [internalLoading, setInternalLoading] = useState(false);
+
+  const isLoading = isModal ? internalLoading : externalLoading;
+
+  // Auto redirect if already logged in (only if not modal)
+  useEffect(() => {
+    if (!isModal) {
+      const user = localStorage.getItem("user");
+      if (user) navigate("/");
+    }
+  }, [isModal, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,17 +60,28 @@ export function LoginForm({ onSubmit, isLoading = false, error }) {
       return;
     }
 
+    if (isModal) setInternalLoading(true);
+
     try {
       await onSubmit(email, password);
+
+      if (isModal && onSuccess) {
+        onSuccess(email);
+      } else {
+        localStorage.setItem("user", email);
+        navigate("/");
+      }
     } catch (err) {
       setLocalError('Login failed. Please try again.');
+    } finally {
+      if (isModal) setInternalLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
         <p className="text-gray-600">Sign in to your StudentHub account</p>
       </div>
 
@@ -46,87 +89,80 @@ export function LoginForm({ onSubmit, isLoading = false, error }) {
         <AlertBox type="error" message={error || localError} />
       )}
 
+      {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Email Address</label>
+        <label className="block text-sm font-medium mb-2">Email</label>
         <input
           type="email"
-          placeholder="you@example.com"
+          className="w-full px-4 py-2 border rounded-lg"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-          required
         />
       </div>
 
+      {/* Password */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Password</label>
+        <label className="block text-sm font-medium mb-2">Password</label>
         <div className="relative">
           <input
             type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
+            className="w-full px-4 py-2 border rounded-lg"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-            required
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-2 text-gray-500"
           >
-            {showPassword ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            )}
+            <EyeToggle show={showPassword} />
           </button>
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
-      >
-        {isLoading ? 'Signing in...' : 'Sign In'}
+      <button className="w-full bg-blue-600 text-white py-2 rounded-lg">
+        {isLoading ? "Signing in..." : "Sign In"}
       </button>
 
-      <p className="text-center text-gray-600">
-        Don't have an account?{' '}
-        <Link to="/signup" className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
-          Sign up
-        </Link>
+      <p className="text-center">
+        Don’t have an account?{" "}
+        {isModal ? (
+          <button type="button" onClick={onSwitchMode} className="text-blue-600 hover:underline">Sign up</button>
+        ) : (
+          <Link to="/signup" className="text-blue-600 hover:underline">Sign up</Link>
+        )}
       </p>
     </form>
   );
 }
 
-export function SignupForm({ onSubmit, isLoading = false, error }) {
+// ================= SIGNUP FORM =================
+export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false, isLoading: externalLoading = false, error }) {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    campus: '',
-    agreeToTerms: false,
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [internalLoading, setInternalLoading] = useState(false);
+
+  const isLoading = isModal ? internalLoading : externalLoading;
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.campus) {
+    if (!formData.firstName || !formData.email || !formData.password || !formData.confirmPassword) {
       setLocalError('Please fill in all fields');
       return;
     }
@@ -136,148 +172,89 @@ export function SignupForm({ onSubmit, isLoading = false, error }) {
       return;
     }
 
-    if (!formData.agreeToTerms) {
-      setLocalError('You must agree to the terms and conditions');
-      return;
-    }
+    if (isModal) setInternalLoading(true);
 
     try {
       await onSubmit(formData);
+
+      if (isModal && onSuccess) {
+        onSuccess(formData.email);
+      } else {
+        localStorage.setItem("user", formData.email);
+        navigate("/");
+      }
     } catch (err) {
-      setLocalError('Signup failed. Please try again.');
+      setLocalError('Signup failed');
+    } finally {
+      if (isModal) setInternalLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-        <p className="text-gray-600">Join StudentHub and start buying/selling today</p>
-      </div>
+
+      <h1 className="text-3xl font-bold">Create Account</h1>
 
       {(error || localError) && (
         <AlertBox type="error" message={error || localError} />
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">First Name</label>
-          <input
-            type="text"
-            placeholder="John"
-            value={formData.firstName}
-            onChange={(e) => handleChange('firstName', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">Last Name</label>
-          <input
-            type="text"
-            placeholder="Doe"
-            value={formData.lastName}
-            onChange={(e) => handleChange('lastName', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-            required
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Email Address</label>
+      <div className="flex gap-3">
         <input
-          type="email"
-          placeholder="you@example.com"
-          value={formData.email}
-          onChange={(e) => handleChange('email', e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-          required
+          type="text"
+          placeholder="First Name"
+          className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+          onChange={(e) => handleChange('firstName', e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Last Name"
+          className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+          onChange={(e) => handleChange('lastName', e.target.value)}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Password</label>
-        <div className="relative">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={(e) => handleChange('password', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            {showPassword ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeWidth={2} d="M3 3l18 18" />
-                <path strokeWidth={2} d="M10.58 10.58A3 3 0 0013.42 13.42" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </div>
+      <input
+        type="email"
+        placeholder="Email"
+        className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+        onChange={(e) => handleChange('email', e.target.value)}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Confirm Password</label>
+      <div className="relative">
         <input
           type={showPassword ? 'text' : 'password'}
-          placeholder="••••••••"
-          value={formData.confirmPassword}
-          onChange={(e) => handleChange('confirmPassword', e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-          required
+          placeholder="Password"
+          className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+          onChange={(e) => handleChange('password', e.target.value)}
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">Campus/University</label>
-        <select
-          value={formData.campus}
-          onChange={(e) => handleChange('campus', e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-          required
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-2 text-gray-400"
         >
-          <option value="">Select your campus</option>
-          <option value="mit">Islamia University of Bahawalpur</option>
-          <option value="stanford">IBA University Sukkur</option>
-          <option value="harvard">University of Punjab</option>
-          <option value="berkeley">University of Karachi</option>
-          <option value="other">Other</option>
-        </select>
+          <EyeToggle show={showPassword} />
+        </button>
       </div>
 
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={formData.agreeToTerms}
-          onChange={(e) => handleChange('agreeToTerms', e.target.checked)}
-          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-        />
-        <span className="text-sm text-gray-700">I agree to the Terms of Service and Privacy Policy</span>
-      </label>
+      <input
+        type={showPassword ? 'text' : 'password'}
+        placeholder="Confirm Password"
+        className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+        onChange={(e) => handleChange('confirmPassword', e.target.value)}
+      />
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
-      >
-        {isLoading ? 'Creating account...' : 'Create Account'}
+      <button className="w-full bg-blue-600 text-white py-2 rounded-lg">
+        {isLoading ? "Creating..." : "Sign Up"}
       </button>
 
-      <p className="text-center text-gray-600">
-        Already have an account?{' '}
-        <Link to="/login" className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
-          Sign in
-        </Link>
+      <p className="text-center">
+        Already have an account?{" "}
+        {isModal ? (
+          <button type="button" onClick={onSwitchMode} className="text-blue-600 hover:underline">Login</button>
+        ) : (
+          <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+        )}
       </p>
     </form>
   );
