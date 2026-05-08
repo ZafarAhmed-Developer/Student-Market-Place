@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        rating: {
+            type: Number,
+            default: 5.0,
+        },
+        numReviews: {
+            type: Number,
+            default: 0,
+        },
     },
     { timestamps: true }
 );

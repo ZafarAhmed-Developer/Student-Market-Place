@@ -88,7 +88,10 @@ export default function ProfilePage() {
 
                 {/* Quick Actions */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-bold text-gray-900">Seller Dashboard</h2>
+                        <Link to="/sell" className="text-blue-600 text-sm font-semibold hover:underline">+ List New Item</Link>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Link
                             to="/sell"

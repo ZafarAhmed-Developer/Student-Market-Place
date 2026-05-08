@@ -121,3 +121,10 @@ export const updateProfile = (data, avatarFile = null) => {
         body: form,
     });
 };
+
+export const submitReview = (sellerId, reviewData) =>
+    request(`/users/${sellerId}/reviews`, {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewData),
+    });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById } from '../api';
+import { getProductById, submitReview } from '../api';
 
 export default function ProductDetailPage() {
     const { id } = useParams();
@@ -11,6 +11,15 @@ export default function ProductDetailPage() {
     const [showNumber, setShowNumber] = useState(false);
     const [contactMessage, setContactMessage] = useState("Hi, I'm interested in this item...");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    
+    // Rating state
+    const [userRating, setUserRating] = useState(5);
+    const [userComment, setUserComment] = useState('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewSuccess, setReviewSuccess] = useState('');
+    const [reviewError, setReviewError] = useState('');
+
+    const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -30,6 +39,38 @@ export default function ProductDetailPage() {
         if (id) fetchProduct();
     }, [id]);
 
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        console.log('Sending message:', contactMessage);
+        setShowContactForm(false);
+        alert('Message sent to seller!');
+    };
+
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        if (!currentUser) {
+            setReviewError('Please login to rate this seller');
+            return;
+        }
+        
+        setIsSubmittingReview(true);
+        setReviewError('');
+        setReviewSuccess('');
+        
+        try {
+            await submitReview(product.seller._id, { rating: userRating, comment: userComment });
+            setReviewSuccess('Thank you for your rating!');
+            setUserComment('');
+            // Refresh product to get updated rating
+            const updatedProduct = await getProductById(id);
+            setProduct(updatedProduct);
+        } catch (err) {
+            setReviewError(err.message || 'Failed to submit review');
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -47,16 +88,11 @@ export default function ProductDetailPage() {
         );
     }
 
-    const handleSendMessage = (e) => {
-        e.preventDefault();
-        console.log('Sending message:', contactMessage);
-        setShowContactForm(false);
-        alert('Message sent to seller!');
-    };
-
     const images = product.images && product.images.length > 0 
         ? product.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`)
         : ['https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=600&h=500&fit=crop'];
+
+    const sellerRating = product.seller?.rating || 5.0;
 
     return (
         <div className="min-h-screen bg-[#f7f8f8] py-8">
@@ -124,6 +160,52 @@ export default function ProductDetailPage() {
                                 {product.description}
                             </p>
                         </div>
+                        
+                        {/* Rating Section */}
+                        <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Rate this Seller</h2>
+                            {currentUser && currentUser._id !== product.seller?._id ? (
+                                <form onSubmit={handleReviewSubmit} className="space-y-4">
+                                    {reviewSuccess && <p className="text-green-600 font-medium">{reviewSuccess}</p>}
+                                    {reviewError && <p className="text-red-600 font-medium">{reviewError}</p>}
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-700 font-medium">Rating:</span>
+                                        <div className="flex gap-1">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button
+                                                    key={star}
+                                                    type="button"
+                                                    onClick={() => setUserRating(star)}
+                                                    className={`text-2xl ${userRating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                >
+                                                    ★
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    <textarea
+                                        value={userComment}
+                                        onChange={(e) => setUserComment(e.target.value)}
+                                        placeholder="Optional: Share your experience with this seller..."
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none h-24 resize-none"
+                                    />
+                                    
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingReview}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    >
+                                        {isSubmittingReview ? 'Submitting...' : 'Submit Rating'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <p className="text-gray-500 italic">
+                                    {!currentUser ? 'Login to rate this seller.' : 'You cannot rate your own listing.'}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Right Column: Price & Seller Info */}
@@ -154,16 +236,41 @@ export default function ProductDetailPage() {
                                 </div>
                                 <div>
                                     <h4 className="text-xl font-bold text-gray-900">{product.seller?.name || 'Student'}</h4>
-                                    <p className="text-gray-500">Member since {product.seller?.createdAt ? new Date(product.seller.createdAt).getFullYear() : '2024'}</p>
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <div className="flex text-yellow-400 text-sm">
+                                            {[1, 2, 3, 4, 5].map((s) => (
+                                                <span key={s}>{sellerRating >= s ? '★' : '☆'}</span>
+                                            ))}
+                                        </div>
+                                        <span className="text-xs text-gray-500 font-bold ml-1">
+                                            ({sellerRating.toFixed(1)})
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-500 text-xs mt-1">Member since {product.seller?.createdAt ? new Date(product.seller.createdAt).getFullYear() : '2024'}</p>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => setShowContactForm(true)}
-                                className="w-full py-4 bg-[#002f34] text-white rounded-lg font-bold hover:bg-[#003d45] transition-all shadow-lg"
-                            >
-                                Chat with seller
-                            </button>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => setShowContactForm(true)}
+                                    className="w-full py-4 bg-[#002f34] text-white rounded-lg font-bold hover:bg-[#003d45] transition-all shadow-lg flex items-center justify-center gap-2"
+                                >
+                                    <span>Chat with seller</span>
+                                </button>
+                                
+                                {product.seller?.phone && (
+                                    <a
+                                        href={`https://wa.me/${product.seller.phone.replace(/\D/g, '')}?text=Hi, I'm interested in: ${encodeURIComponent(product.title)}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        className="w-full py-4 bg-[#25D366] text-white rounded-lg font-bold hover:bg-[#128C7E] transition-all shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.938 3.659 1.435 5.633 1.435h.005c6.558 0 11.894-5.335 11.897-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                        </svg>
+                                        <span>WhatsApp Seller</span>
+                                    </a>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

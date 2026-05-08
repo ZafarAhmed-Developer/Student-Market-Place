@@ -1,47 +1,53 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Review = require('../models/Review');
 const { protect } = require('../middleware/auth');
-const upload = require('../middleware/upload');
 
-// ─── GET /api/users/:id ────────────────────────────────────────────────────────
-// Public — get user public profile
-router.get('/:id', async (req, res) => {
+// @desc    Create a new review for a seller
+// @route   POST /api/users/:id/reviews
+// @access  Private
+router.post('/:id/reviews', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select('-password -email');
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        res.json(user);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
+        const { rating, comment } = req.body;
+        const sellerId = req.params.id;
+        const userId = req.user._id;
 
-// ─── PUT /api/users/profile ────────────────────────────────────────────────────
-// Protected — update own profile (name, campus, phone, avatar)
-router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (sellerId === userId.toString()) {
+            return res.status(400).json({ message: "You cannot rate yourself" });
+        }
 
-        const { name, campus, phone, password } = req.body;
+        const seller = await User.findById(sellerId);
 
-        if (name) user.name = name;
-        if (campus !== undefined) user.campus = campus;
-        if (phone !== undefined) user.phone = phone;
-        if (password) user.password = password; // pre-save hook will hash it
-        if (req.file) user.avatar = `/uploads/${req.file.filename}`;
+        if (!seller) {
+            return res.status(404).json({ message: "Seller not found" });
+        }
 
-        const updated = await user.save();
-        res.json({
-            _id: updated._id,
-            name: updated.name,
-            email: updated.email,
-            campus: updated.campus,
-            phone: updated.phone,
-            avatar: updated.avatar,
+        const alreadyReviewed = await Review.findOne({ user: userId, seller: sellerId });
+
+        if (alreadyReviewed) {
+            return res.status(400).json({ message: "You have already rated this seller" });
+        }
+
+        const review = await Review.create({
+            name: req.user.name,
+            rating: Number(rating),
+            comment: comment || '',
+            user: userId,
+            seller: sellerId,
         });
+
+        // Update seller average rating
+        const reviews = await Review.find({ seller: sellerId });
+        seller.numReviews = reviews.length;
+        seller.rating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
+
+        await seller.save();
+
+        res.status(201).json({ message: "Review added successfully" });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
     }
 });
 
