@@ -31,6 +31,10 @@ router.post("/register", async (req, res) => {
       email: user.email,
       campus: user.campus,
       phone: user.phone,
+      avatar: user.avatar,
+      sellCount: user.sellCount || 0,
+      rating: user.rating || 5.0,
+      numReviews: user.numReviews || 0,
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -59,6 +63,9 @@ router.post("/login", async (req, res) => {
       campus: user.campus,
       phone: user.phone,
       avatar: user.avatar,
+      sellCount: user.sellCount || 0,
+      rating: user.rating || 5.0,
+      numReviews: user.numReviews || 0,
       token: generateToken(user._id),
     });
   } catch (err) {

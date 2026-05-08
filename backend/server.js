@@ -6,7 +6,8 @@ const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
-const userRoutes = require("./routes/users");
+const userProfileRoutes = require("./routes/userSellListRoutes"); // Reviews and Profile
+const userSellListRoutes = require("./routes/user"); // The actual sell list
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,7 +30,8 @@ app.get("/", (req, res) => {
 });
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", userProfileRoutes);
+app.use("/api/user-sell-list", userSellListRoutes);
 
 // Health check
 app.get("/api/health", (req, res) =>

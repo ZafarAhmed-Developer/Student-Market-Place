@@ -68,9 +68,17 @@ export default function ProductDetailPage() {
             await submitReview(product.seller._id, { rating: userRating, comment: userComment });
             setReviewSuccess('Thank you for your rating!');
             setUserComment('');
+            
             // Refresh product to get updated rating
             const updatedProduct = await getProductById(id);
             setProduct(updatedProduct);
+            
+            // Refresh reviews list
+            if (product.seller?._id) {
+                const reviewData = await getSellerReviews(product.seller._id);
+                setReviews(reviewData);
+            }
+
         } catch (err) {
             setReviewError(err.message || 'Failed to submit review');
         } finally {

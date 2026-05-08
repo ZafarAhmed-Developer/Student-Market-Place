@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const User = require('../models/User');
+const UserSellList = require('../models/UserSellList');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
@@ -76,6 +78,19 @@ router.post('/', protect, upload.array('images', 5), async (req, res) => {
             location: location || req.user.campus || '',
         });
 
+        // Add to UserSellList
+        await UserSellList.create({
+            user: req.user._id,
+            product: product._id,
+            productName: product.title,
+        });
+
+        // Increment User sellCount
+        const user = await User.findById(req.user._id);
+        if (user) {
+            await user.incrementSellCount();
+        }
+
         await product.populate('seller', 'name campus phone avatar rating numReviews');
         res.status(201).json(product);
     } catch (err) {
@@ -96,7 +111,11 @@ router.put('/:id', protect, upload.array('images', 5), async (req, res) => {
 
         const { title, description, price, category, condition, location, isActive } = req.body;
 
-        if (title) product.title = title;
+        if (title) {
+            product.title = title;
+            // Update UserSellList productName
+            await UserSellList.findOneAndUpdate({ product: product._id }, { productName: title });
+        }
         if (description) product.description = description;
         if (price !== undefined) product.price = Number(price);
         if (category) product.category = category;
@@ -111,6 +130,7 @@ router.put('/:id', protect, upload.array('images', 5), async (req, res) => {
         }
 
         const updated = await product.save();
+
         await updated.populate('seller', 'name campus phone avatar rating numReviews');
         res.json(updated);
     } catch (err) {
@@ -129,7 +149,18 @@ router.delete('/:id', protect, async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to delete this listing' });
         }
 
+        const sellerId = product.seller;
         await product.deleteOne();
+
+        // Remove from UserSellList
+        await UserSellList.deleteOne({ product: req.params.id });
+
+        // Decrement User sellCount
+        const user = await User.findById(sellerId);
+        if (user) {
+            await user.decrementSellCount();
+        }
+
         res.json({ message: 'Listing deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });

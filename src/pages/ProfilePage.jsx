@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Package, LogOut, ShoppingBag, Star, MapPin, Edit2, Camera, Save, X } from 'lucide-react';
-import { updateProfile, IMAGE_BASE } from '../api';
+import { updateProfile, getMe, getUserSellList, IMAGE_BASE } from '../api';
 
 export default function ProfilePage() {
     const navigate = useNavigate();
@@ -12,30 +12,47 @@ export default function ProfilePage() {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [sellList, setSellList] = useState([]);
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (!storedUser) {
-            navigate('/');
-            return;
-        }
-        try {
-            const userData = JSON.parse(storedUser);
-            setUser(userData);
-            setEditData({
-                name: userData.name || '',
-                phone: userData.phone || '',
-                campus: userData.campus || ''
-            });
-            if (userData.avatar) {
-                setAvatarPreview(userData.avatar.startsWith('http') ? userData.avatar : `${IMAGE_BASE}${userData.avatar}`);
+        const fetchUserData = async () => {
+            const storedUser = localStorage.getItem('user');
+            if (!storedUser) {
+                navigate('/');
+                return;
             }
-        } catch (e) {
-            console.error('Failed to parse user from localStorage');
-            localStorage.removeItem('user');
-            navigate('/');
-        }
+
+            try {
+                setIsLoadingStats(true);
+                // Get fresh data from server
+                const freshUser = await getMe();
+                setUser(freshUser);
+                setEditData({
+                    name: freshUser.name || '',
+                    phone: freshUser.phone || '',
+                    campus: freshUser.campus || ''
+                });
+                if (freshUser.avatar) {
+                    setAvatarPreview(freshUser.avatar.startsWith('http') ? freshUser.avatar : `${IMAGE_BASE}${freshUser.avatar}`);
+                }
+                
+                // Also fetch the 4th collection (Sell List)
+                const list = await getUserSellList(freshUser._id);
+                setSellList(list);
+
+            } catch (err) {
+                console.error('Failed to fetch user data:', err);
+                // Fallback to local storage if server fails
+                const userData = JSON.parse(storedUser);
+                setUser(userData);
+            } finally {
+                setIsLoadingStats(false);
+            }
+        };
+
+        fetchUserData();
     }, [navigate]);
 
     const handleLogout = () => {
@@ -211,9 +228,9 @@ export default function ProfilePage() {
                 {/* Stats Row */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     {[
-                        { label: 'Listings', value: '0', icon: Package, color: 'text-blue-600 bg-blue-50' },
-                        { label: 'Sold', value: '0', icon: ShoppingBag, color: 'text-green-600 bg-green-50' },
-                        { label: 'Rating', value: '—', icon: Star, color: 'text-yellow-600 bg-yellow-50' },
+                        { label: 'Listings', value: user.sellCount || 0, icon: Package, color: 'text-blue-600 bg-blue-50' },
+                        { label: 'Reviews', value: user.numReviews || 0, icon: Star, color: 'text-green-600 bg-green-50' },
+                        { label: 'Rating', value: user.rating ? user.rating.toFixed(1) : '5.0', icon: Star, color: 'text-yellow-600 bg-yellow-50' },
                     ].map(({ label, value, icon: Icon, color }) => (
                         <div key={label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-center gap-2">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
@@ -225,41 +242,36 @@ export default function ProfilePage() {
                     ))}
                 </div>
 
-                {/* Quick Actions */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-bold text-gray-900">Seller Dashboard</h2>
-                        <Link to="/sell" className="text-blue-600 text-sm font-semibold hover:underline">+ List New Item</Link>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Link
-                            to="/sell"
-                            className="flex items-center gap-3 p-4 rounded-xl bg-orange-50 border border-orange-100 hover:bg-orange-100 transition-colors group"
-                        >
-                            <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                                <Package size={20} />
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">Post a Listing</p>
-                                <p className="text-xs text-gray-500">Sell your items quickly</p>
-                            </div>
-                        </Link>
-                        <Link
-                            to="/my-listings"
-                            className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors group"
-                        >
-                            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
-                                <ShoppingBag size={20} />
-                            </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">My Listings</p>
-                                <p className="text-xs text-gray-500">Manage your listings</p>
-                            </div>
-                        </Link>
-                    </div>
+                {/* User Sell List (The 4th Collection) */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">My Sales Registry</h2>
+                    {sellList.length === 0 ? (
+                        <p className="text-gray-500 text-sm italic text-center py-4">No sales recorded in the registry yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-100">
+                                        <th className="pb-3 font-semibold text-gray-600">Product Name</th>
+                                        <th className="pb-3 font-semibold text-gray-600">Price</th>
+                                        <th className="pb-3 font-semibold text-gray-600">Date Listed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sellList.map((item) => (
+                                        <tr key={item._id} className="border-b border-gray-50 last:border-0">
+                                            <td className="py-3 font-medium text-gray-900">{item.productName}</td>
+                                            <td className="py-3 text-gray-600">Rs. {item.product?.price || 'N/A'}</td>
+                                            <td className="py-3 text-gray-500">{new Date(item.createdAt).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-
             </div>
         </div>
+
     );
 }

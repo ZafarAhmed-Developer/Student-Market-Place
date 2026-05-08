@@ -132,3 +132,13 @@ export const submitReview = (sellerId, reviewData) =>
 
 export const getSellerReviews = (sellerId) =>
     request(`/users/${sellerId}/reviews`);
+
+// ════════════════════════════════════════════════════════════════════════════════
+// USER SELL LIST
+// ════════════════════════════════════════════════════════════════════════════════
+
+export const getUserSellList = (userId) =>
+    request(`/user-sell-list/${userId}`);
+
+export const getMySellList = () =>
+    request('/user-sell-list/my/list', { headers: authHeaders() });

@@ -5,6 +5,20 @@ const Review = require('../models/Review');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+// @desc    Get public user profile
+// @route   GET /api/users/:id
+// @access  Public
+router.get('/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+            .select('name avatar campus phone rating numReviews sellCount createdAt');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // @desc    Create a new review for a seller
 // @route   POST /api/users/:id/reviews
 // @access  Private
@@ -48,6 +62,44 @@ router.post('/:id/reviews', protect, async (req, res) => {
         res.status(201).json({ message: "Review added successfully" });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// @desc    Delete a review
+// @route   DELETE /api/users/reviews/:id
+// @access  Private
+router.delete('/reviews/:id', protect, async (req, res) => {
+    try {
+        const review = await Review.findById(req.params.id);
+
+        if (!review) {
+            return res.status(404).json({ message: "Review not found" });
+        }
+
+        // Only the reviewer can delete their review
+        if (review.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Not authorized to delete this review" });
+        }
+
+        const sellerId = review.seller;
+        await review.deleteOne();
+
+        // Update seller average rating
+        const seller = await User.findById(sellerId);
+        if (seller) {
+            const reviews = await Review.find({ seller: sellerId });
+            seller.numReviews = reviews.length;
+            if (reviews.length > 0) {
+                seller.rating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
+            } else {
+                seller.rating = 5.0; // Default rating if no reviews
+            }
+            await seller.save();
+        }
+
+        res.json({ message: "Review deleted successfully" });
+    } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
 });
@@ -96,8 +148,12 @@ router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
                 phone: updatedUser.phone,
                 campus: updatedUser.campus,
                 avatar: updatedUser.avatar,
+                sellCount: updatedUser.sellCount || 0,
+                rating: updatedUser.rating || 5.0,
+                numReviews: updatedUser.numReviews || 0,
                 token: req.headers.authorization.split(' ')[1], // Return the same token
             });
+
         } else {
             res.status(404).json({ message: 'User not found' });
         }
