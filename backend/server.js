@@ -40,16 +40,21 @@ app.use((err, req, res, next) => {
 });
 
 // ── Connect to MongoDB and start server ───────────────────────────────────────
-mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
+const startServer = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ MongoDB connected successfully');
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running on http://localhost:${PORT}`);
-            console.log(`📦 API Base: http://localhost:${PORT}/api`);
-        });
-    })
-    .catch((err) => {
+    } catch (err) {
         console.error('❌ MongoDB connection error:', err.message);
-        process.exit(1);
+        console.log('⚠️ Server started without MongoDB connection. Some features will not work.');
+        console.log('👉 Please update your MONGO_URI in .env with a valid MongoDB Atlas string.');
+    }
+
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📦 API Base: http://localhost:${PORT}/api`);
+        console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
     });
+};
+
+startServer();
