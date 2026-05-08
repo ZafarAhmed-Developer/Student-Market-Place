@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+<<<<<<< HEAD
 
+=======
+// import { allProducts } from './HomePage'; 
+>>>>>>> d9460f49bda9fa6d659e0b78bf3077dee80ee6d9
 
 const allProducts = [
     {
