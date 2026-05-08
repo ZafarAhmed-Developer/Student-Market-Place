@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../components/Utilities';
+import { createProduct } from '../api';
 
 export default function SellPage() {
     const navigate = useNavigate();
@@ -49,6 +50,7 @@ export default function SellPage() {
         { value: 'furniture', label: 'Furniture' },
         { value: 'dorm', label: 'Dorm Essentials' },
         { value: 'clothing', label: 'Clothing & Accessories' },
+        { value: 'other', label: 'Other' },
     ];
 
     const handleInputChange = (e) => {
@@ -83,8 +85,8 @@ export default function SellPage() {
         setIsLoading(true);
 
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            console.log('Product listed:', { ...formData, images });
+            const result = await createProduct(formData, images);
+            console.log('Product listed successfully:', result);
             setSuccess(true);
 
             setFormData({
@@ -97,10 +99,11 @@ export default function SellPage() {
             setImages([]);
 
             setTimeout(() => {
-                window.location.href = '/my-listings';
+                navigate('/my-listings');
             }, 2000);
         } catch (err) {
-            setError('Failed to list product. Please try again.');
+            console.error('Error creating product:', err);
+            setError(err.message || 'Failed to list product. Please try again.');
         } finally {
             setIsLoading(false);
         }

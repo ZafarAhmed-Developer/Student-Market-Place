@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function ProductCard({
-    id,
+    _id,
+    id, // for backward compatibility if needed
     title,
     price,
-    imageUrl,
+    images = [],
+    imageUrl, // for backward compatibility if needed
     category,
     seller,
     location,
@@ -14,8 +16,15 @@ export default function ProductCard({
 }) {
     const [isHovered, setIsHovered] = useState(false);
 
+    // Use images[0] or fallback to imageUrl or a placeholder
+    const displayImage = (images && images.length > 0)
+        ? (images[0].startsWith('http') ? images[0] : `http://localhost:5000${images[0]}`)
+        : (imageUrl || 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop');
+
+    const productId = _id || id;
+
     return (
-        <Link to={`/product/${id}`}>
+        <Link to={`/product/${productId}`}>
             <div
                 className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col hover:scale-105 cursor-pointer"
                 onMouseEnter={() => setIsHovered(true)}
@@ -24,7 +33,7 @@ export default function ProductCard({
                 {/* Image Container */}
                 <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
                     <img
-                        src={imageUrl}
+                        src={displayImage}
                         alt={title}
                         className="w-full h-full object-cover transition-transform duration-300"
                         style={{
@@ -33,7 +42,7 @@ export default function ProductCard({
                     />
 
                     {/* Category Badge */}
-                    <div className="absolute top-3 left-3 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    <div className="absolute top-3 left-3 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase">
                         {category}
                     </div>
 
@@ -41,7 +50,7 @@ export default function ProductCard({
                     <button
                         onClick={(e) => {
                             e.preventDefault();
-                            onFavoriteToggle?.(id);
+                            onFavoriteToggle?.(productId);
                         }}
                         className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors flex items-center justify-center"
                     >
@@ -73,20 +82,20 @@ export default function ProductCard({
 
                     <div className="mb-3">
                         <p className="text-2xl font-bold text-blue-600">
-                            ${price.toFixed(2)}
+                            ${typeof price === 'number' ? price.toFixed(2) : price}
                         </p>
                     </div>
 
                     <div className="border-t border-gray-200 pt-3 mt-auto">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-900">{seller.name}</p>
+                                <p className="text-sm font-medium text-gray-900">{seller?.name || 'Student'}</p>
                                 <div className="flex items-center gap-1 mt-1">
                                     <svg className="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24">
                                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                     </svg>
                                     <span className="text-xs text-gray-600">
-                                        {seller.rating.toFixed(1)}
+                                        {seller?.rating ? seller.rating.toFixed(1) : '5.0'}
                                     </span>
                                 </div>
                             </div>

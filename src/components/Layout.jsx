@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, X, User } from "lucide-react";
 import { LoginForm, SignupForm } from "./AuthForms";
+import { loginUser, registerUser } from "../api";
 
 export function Header({ onOpenAuth, isAuthenticated }) {
 
@@ -221,6 +222,7 @@ export default function AppLayout({ children }) {
     const [authModal, setAuthModal] = useState(null);
     const [redirectAfterAuth, setRedirectAfterAuth] = useState('/profile');
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('user'));
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || 'null'));
 
     // Open auth modal; optionally set where to redirect after success
     const openAuth = (mode, redirectTo = '/profile') => {
@@ -240,16 +242,25 @@ export default function AppLayout({ children }) {
     }, [authModal]);
 
     const handleLoginSubmit = async (email, password) => {
-        return new Promise((resolve) => setTimeout(resolve, 1000));
+        const data = await loginUser(email, password);
+        return data;
     };
 
-    const handleSignupSubmit = async (data) => {
-        return new Promise((resolve) => setTimeout(resolve, 1000));
+    const handleSignupSubmit = async (formData) => {
+        const data = await registerUser(
+            formData.firstName + (formData.lastName ? ' ' + formData.lastName : ''),
+            formData.email,
+            formData.password,
+            formData.campus || '',
+            formData.phone || ''
+        );
+        return data;
     };
 
-    const handleAuthSuccess = (email) => {
-        localStorage.setItem('user', email);
+    const handleAuthSuccess = (userData) => {
+        localStorage.setItem('user', JSON.stringify(userData));
         setIsAuthenticated(true);
+        setUser(userData);
         setAuthModal(null);
         navigate(redirectAfterAuth);
     };

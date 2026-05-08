@@ -1,21 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import ProductGrid from '../components/ProductGrid';
+import { getProducts } from '../api';
 
 export default function BrowsePage() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const [searchValue, setSearchValue] = useState('');
+    const [products, setProducts] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
     const [favorites, setFavorites] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const cat = searchParams.get('category');
-        if (cat) {
-            setSelectedCategory(cat);
-        } else {
-            setSelectedCategory('');
-        }
+        setSelectedCategory(cat || '');
+        
+        const fetchProducts = async () => {
+            try {
+                setIsLoading(true);
+                const params = {};
+                if (cat) params.category = cat;
+                const data = await getProducts(params);
+                setProducts(data);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching products:', err);
+                setError('Failed to load products');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProducts();
     }, [searchParams]);
 
     const handleCategoryChange = (val) => {
@@ -27,59 +43,19 @@ export default function BrowsePage() {
         }
     };
 
-    const mockProducts = [
-        {
-            id: '1',
-            title: 'Introduction to Algorithms',
-            price: 45.99,
-            imageUrl: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=300&fit=crop',
-            category: 'Books',
-            seller: { name: 'Zafar Ahmed', rating: 4.8 },
-            location: 'Karachi University',
-        },
-        {
-            id: '2',
-            title: 'MacBook Pro 13"',
-            price: 899.99,
-            imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=300&fit=crop',
-            category: 'Electronics',
-            seller: { name: 'Abrar', rating: 4.9 },
-            location: 'LUMS Campus',
-        },
-        {
-            id: '3',
-            title: 'Wireless Headphones',
-            price: 79.99,
-            imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop',
-            category: 'Electronics',
-            seller: { name: 'Moeed', rating: 4.8 },
-            location: 'NED University',
-        },
-    ];
-
-    const categories = [
-        { value: 'books', label: 'Books' },
-        { value: 'electronics', label: 'Electronics' },
-        { value: 'furniture', label: 'Furniture' },
-        { value: 'dorm', label: 'Dorm Essentials' },
-    ];
-
     const handleFavoriteToggle = (id) => {
         setFavorites((prev) =>
             prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
         );
     };
 
-    const filteredProducts = mockProducts.filter((product) => {
-        const matchesCategory = !selectedCategory || product.category.toLowerCase() === selectedCategory;
-        return matchesCategory;
-    });
-
     const categoryLabels = {
         books: 'Books',
         electronics: 'Electronics',
         furniture: 'Furniture',
         dorm: 'Dorm Essentials',
+        clothing: 'Clothing & Accessories',
+        other: 'Other'
     };
 
     return (
@@ -101,10 +77,10 @@ export default function BrowsePage() {
                                         ×
                                     </button>
                                 </span>
-                                <span className="text-gray-400 text-sm">{filteredProducts.length} items</span>
+                                <span className="text-gray-400 text-sm">{products.length} items</span>
                             </>
                         ) : (
-                            <span className="text-gray-500 text-sm">Showing all {filteredProducts.length} items — select a category above to filter</span>
+                            <span className="text-gray-500 text-sm">Showing all {products.length} items — select a category above to filter</span>
                         )}
                     </div>
                 </div>
@@ -112,12 +88,18 @@ export default function BrowsePage() {
 
             <section className="py-12 md:py-16">
                 <div className="container mx-auto px-4 md:px-8">
-                    <ProductGrid
-                        products={filteredProducts}
-                        isLoading={isLoading}
-                        onFavoriteToggle={handleFavoriteToggle}
-                        favorites={favorites}
-                    />
+                    {error ? (
+                        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-center">
+                            {error}
+                        </div>
+                    ) : (
+                        <ProductGrid
+                            products={products}
+                            isLoading={isLoading}
+                            onFavoriteToggle={handleFavoriteToggle}
+                            favorites={favorites}
+                        />
+                    )}
                 </div>
             </section>
         </>

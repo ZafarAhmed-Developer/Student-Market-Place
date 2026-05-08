@@ -63,12 +63,12 @@ export function LoginForm({ onSubmit, onSuccess, onSwitchMode, isModal = false, 
     if (isModal) setInternalLoading(true);
 
     try {
-      await onSubmit(email, password);
+      const data = await onSubmit(email, password);
 
       if (isModal && onSuccess) {
-        onSuccess(email);
+        onSuccess(data);
       } else {
-        localStorage.setItem("user", email);
+        localStorage.setItem("user", JSON.stringify(data));
         navigate("/");
       }
     } catch (err) {
@@ -175,12 +175,12 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
     if (isModal) setInternalLoading(true);
 
     try {
-      await onSubmit(formData);
+      const data = await onSubmit(formData);
 
       if (isModal && onSuccess) {
-        onSuccess(formData.email);
+        onSuccess(data);
       } else {
-        localStorage.setItem("user", formData.email);
+        localStorage.setItem("user", JSON.stringify(data));
         navigate("/");
       }
     } catch (err) {

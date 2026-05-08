@@ -37,14 +37,17 @@ export default function ProductGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          {...product}
-          isFavorite={favorites.includes(product.id)}
-          onFavoriteToggle={onFavoriteToggle}
-        />
-      ))}
+      {products.map((product) => {
+        const id = product._id || product.id;
+        return (
+          <ProductCard
+            key={id}
+            {...product}
+            isFavorite={favorites.includes(id)}
+            onFavoriteToggle={onFavoriteToggle}
+          />
+        );
+      })}
     </div>
   );
 }

@@ -1,48 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-
-const allProducts = [
-    {
-        id: '1',
-        title: 'Introduction to Algorithms Textbook',
-        price: 45.99,
-        images: [
-            'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&h=500&fit=crop',
-            'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=600&h=500&fit=crop',
-        ],
-        category: 'Books',
-        condition: 'like-new',
-        description: 'Excellent condition textbook. Minimal highlighting and notes. Perfect for algorithms course.',
-        seller: {
-            name: 'Zafar Ahmed',
-            phone: '+923001234567', // Added phone for WhatsApp/Show Number
-            rating: 4.8,
-            reviews: 24,
-            campus: 'Karachi University',
-        },
-        location: 'Karachi University',
-        postedDate: '2024-01-15',
-    },
-    // Your other products (Laptop, Phone, etc. ) should be in this list too!
-];
+import { getProductById } from '../api';
 
 export default function ProductDetailPage() {
     const { id } = useParams();
-
-
+    const [product, setProduct] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showContactForm, setShowContactForm] = useState(false);
     const [showNumber, setShowNumber] = useState(false);
     const [contactMessage, setContactMessage] = useState("Hi, I'm interested in this item...");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                setIsLoading(true);
+                const data = await getProductById(id);
+                setProduct(data);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching product:', err);
+                setError('Product not found');
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    const product = allProducts.find(p => p.id.toString() === id?.toString());
+        if (id) fetchProduct();
+    }, [id]);
 
-
-    if (!product) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-                <h2 className="text-2xl font-bold text-gray-800">Product not found</h2>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (error || !product) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+                <h2 className="text-2xl font-bold text-gray-800">{error || 'Product not found'}</h2>
                 <Link to="/" className="mt-4 text-blue-600 hover:underline">Back to Home</Link>
             </div>
         );
@@ -55,6 +54,10 @@ export default function ProductDetailPage() {
         alert('Message sent to seller!');
     };
 
+    const images = product.images && product.images.length > 0 
+        ? product.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`)
+        : ['https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=600&h=500&fit=crop'];
+
     return (
         <div className="min-h-screen bg-[#f7f8f8] py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,7 +65,7 @@ export default function ProductDetailPage() {
                 <nav className="flex mb-8 text-sm text-gray-500">
                     <Link to="/" className="hover:text-gray-700">Home</Link>
                     <span className="mx-2">/</span>
-                    <Link to="/browse" className="hover:text-gray-700">{product.category}</Link>
+                    <Link to="/browse" className="hover:text-gray-700 capitalize">{product.category}</Link>
                     <span className="mx-2">/</span>
                     <span className="text-gray-900 font-medium">{product.title}</span>
                 </nav>
@@ -74,14 +77,14 @@ export default function ProductDetailPage() {
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
                             <div className="relative h-[500px] bg-black flex items-center justify-center">
                                 <img
-                                    src={product.images[currentImageIndex]}
+                                    src={images[currentImageIndex]}
                                     alt={product.title}
                                     className="max-h-full max-w-full object-contain"
                                 />
-                                {product.images.length > 1 && (
+                                {images.length > 1 && (
                                     <>
                                         <button
-                                            onClick={() => setCurrentImageIndex(prev => prev === 0 ? product.images.length - 1 : prev - 1)}
+                                            onClick={() => setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
                                             className="absolute left-4 p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition-colors"
                                         >
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,7 +92,7 @@ export default function ProductDetailPage() {
                                             </svg>
                                         </button>
                                         <button
-                                            onClick={() => setCurrentImageIndex(prev => (prev + 1) % product.images.length)}
+                                            onClick={() => setCurrentImageIndex(prev => (prev + 1) % images.length)}
                                             className="absolute right-4 p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition-colors"
                                         >
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +104,7 @@ export default function ProductDetailPage() {
                             </div>
                             {/* Thumbnails */}
                             <div className="flex p-4 gap-2 overflow-x-auto bg-gray-50">
-                                {product.images.map((img, idx) => (
+                                {images.map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setCurrentImageIndex(idx)}
@@ -137,8 +140,8 @@ export default function ProductDetailPage() {
                             </div>
                             <p className="text-xl text-gray-600 mb-6">{product.title}</p>
                             <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
-                                <span>{product.location}</span>
-                                <span>{product.postedDate}</span>
+                                <span>{product.location || product.seller?.campus}</span>
+                                <span>{product.createdAt ? new Date(product.createdAt).toLocaleDateString() : ''}</span>
                             </div>
                         </div>
 
@@ -147,11 +150,11 @@ export default function ProductDetailPage() {
                             <h3 className="text-lg font-bold text-gray-900 mb-6">Seller Information</h3>
                             <div className="flex items-center gap-4 mb-8">
                                 <div className="w-16 h-16 bg-[#002f34] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                                    {product.seller.name.charAt(0)}
+                                    {product.seller?.name?.charAt(0) || 'S'}
                                 </div>
                                 <div>
-                                    <h4 className="text-xl font-bold text-gray-900">{product.seller.name}</h4>
-                                    <p className="text-gray-500">Member since Jan 2024</p>
+                                    <h4 className="text-xl font-bold text-gray-900">{product.seller?.name || 'Student'}</h4>
+                                    <p className="text-gray-500">Member since {product.seller?.createdAt ? new Date(product.seller.createdAt).getFullYear() : '2024'}</p>
                                 </div>
                             </div>
 
@@ -181,7 +184,7 @@ export default function ProductDetailPage() {
                                 <div>
                                     <p className="text-[10px] text-gray-500 uppercase font-bold">Phone Number</p>
                                     <p className="text-lg font-bold text-[#002f34]">
-                                        {showNumber ? product.seller.phone : "+92 300 •••••••"}
+                                        {showNumber ? (product.seller?.phone || 'No phone provided') : "+92 300 •••••••"}
                                     </p>
                                 </div>
                                 {!showNumber && (
@@ -190,13 +193,15 @@ export default function ProductDetailPage() {
                             </div>
 
                             {/* WhatsApp */}
-                            <a
-                                href={`https://wa.me/${product.seller.phone.replace(/\D/g, '')}?text=Hi, I'm interested in: ${encodeURIComponent(product.title)}`}
-                                target="_blank" rel="noopener noreferrer"
-                                className="w-full py-3 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-bold flex items-center justify-center gap-2 transition-colors"
-                            >
-                                WhatsApp
-                            </a>
+                            {product.seller?.phone && (
+                                <a
+                                    href={`https://wa.me/${product.seller.phone.replace(/\D/g, '')}?text=Hi, I'm interested in: ${encodeURIComponent(product.title)}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="w-full py-3 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] font-bold flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    WhatsApp
+                                </a>
+                            )}
                         </div>
 
                         <form onSubmit={handleSendMessage} className="space-y-4">

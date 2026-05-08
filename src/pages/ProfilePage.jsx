@@ -7,24 +7,32 @@ export default function ProfilePage() {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const email = localStorage.getItem('user');
-        if (!email) {
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
             navigate('/');
             return;
         }
-        setUser({ email, name: email.split('@')[0] });
+        try {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+        } catch (e) {
+            console.error('Failed to parse user from localStorage');
+            localStorage.removeItem('user');
+            navigate('/');
+        }
     }, [navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
         navigate('/');
         window.location.reload();
     };
 
     if (!user) return null;
 
-    const displayName = user.name.charAt(0).toUpperCase() + user.name.slice(1);
-    const initials = displayName.slice(0, 2).toUpperCase();
+    const displayName = user.name ? (user.name.charAt(0).toUpperCase() + user.name.slice(1)) : 'Student';
+    const initials = user.name ? user.name.slice(0, 2).toUpperCase() : 'ST';
 
     return (
         <div className="min-h-screen bg-gray-50 py-10">
