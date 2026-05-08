@@ -146,6 +146,8 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
     email: '',
     password: '',
     confirmPassword: '',
+    phone: '',
+    campus: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -162,7 +164,7 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
     e.preventDefault();
     setLocalError('');
 
-    if (!formData.firstName || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.firstName || !formData.email || !formData.password || !formData.confirmPassword || !formData.phone) {
       setLocalError('Please fill in all fields');
       return;
     }
@@ -175,7 +177,14 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
     if (isModal) setInternalLoading(true);
 
     try {
-      const data = await onSubmit(formData);
+      // Send data to backend
+      const data = await onSubmit({
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        campus: formData.campus || ''
+      });
 
       if (isModal && onSuccess) {
         onSuccess(data);
@@ -184,7 +193,7 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
         navigate("/");
       }
     } catch (err) {
-      setLocalError('Signup failed');
+      setLocalError(err.message || 'Signup failed');
     } finally {
       if (isModal) setInternalLoading(false);
     }
@@ -204,12 +213,15 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
           type="text"
           placeholder="First Name"
           className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+          value={formData.firstName}
           onChange={(e) => handleChange('firstName', e.target.value)}
+          required
         />
         <input
           type="text"
           placeholder="Last Name"
           className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+          value={formData.lastName}
           onChange={(e) => handleChange('lastName', e.target.value)}
         />
       </div>
@@ -218,7 +230,18 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
         type="email"
         placeholder="Email"
         className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+        value={formData.email}
         onChange={(e) => handleChange('email', e.target.value)}
+        required
+      />
+
+      <input
+        type="text"
+        placeholder="WhatsApp Number (e.g. +92...)"
+        className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+        value={formData.phone}
+        onChange={(e) => handleChange('phone', e.target.value)}
+        required
       />
 
       <div className="relative">
@@ -226,7 +249,9 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
           type={showPassword ? 'text' : 'password'}
           placeholder="Password"
           className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+          value={formData.password}
           onChange={(e) => handleChange('password', e.target.value)}
+          required
         />
         <button
           type="button"
@@ -241,10 +266,12 @@ export function SignupForm({ onSubmit, onSuccess, onSwitchMode, isModal = false,
         type={showPassword ? 'text' : 'password'}
         placeholder="Confirm Password"
         className="w-full px-4 py-2 border rounded-lg outline-none focus:border-blue-400"
+        value={formData.confirmPassword}
         onChange={(e) => handleChange('confirmPassword', e.target.value)}
+        required
       />
 
-      <button className="w-full bg-blue-600 text-white py-2 rounded-lg">
+      <button className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">
         {isLoading ? "Creating..." : "Sign Up"}
       </button>
 

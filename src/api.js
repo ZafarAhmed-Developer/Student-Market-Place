@@ -1,5 +1,6 @@
 // Base URL of the backend API
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://localhost:5001/api';
+export const IMAGE_BASE = 'http://localhost:5001';
 
 // ── Helper: get auth token from localStorage ──────────────────────────────────
 const getToken = () => {
@@ -128,3 +129,6 @@ export const submitReview = (sellerId, reviewData) =>
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(reviewData),
     });
+
+export const getSellerReviews = (sellerId) =>
+    request(`/users/${sellerId}/reviews`);

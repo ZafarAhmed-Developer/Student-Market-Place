@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
         if (sort === 'price_desc') sortOption = { price: -1 };
 
         const products = await Product.find(filter)
-            .populate('seller', 'name campus phone avatar')
+            .populate('seller', 'name campus phone avatar rating numReviews')
             .sort(sortOption);
 
         res.json(products);
@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
-            .populate('seller', 'name campus phone avatar createdAt');
+            .populate('seller', 'name campus phone avatar rating numReviews createdAt');
 
         if (!product || !product.isActive) {
             return res.status(404).json({ message: 'Product not found' });
@@ -76,7 +76,7 @@ router.post('/', protect, upload.array('images', 5), async (req, res) => {
             location: location || req.user.campus || '',
         });
 
-        await product.populate('seller', 'name campus phone avatar');
+        await product.populate('seller', 'name campus phone avatar rating numReviews');
         res.status(201).json(product);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -111,7 +111,7 @@ router.put('/:id', protect, upload.array('images', 5), async (req, res) => {
         }
 
         const updated = await product.save();
-        await updated.populate('seller', 'name campus phone avatar');
+        await updated.populate('seller', 'name campus phone avatar rating numReviews');
         res.json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });

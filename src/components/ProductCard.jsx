@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { IMAGE_BASE } from '../api';
 
 export default function ProductCard({
     _id,
@@ -16,12 +17,10 @@ export default function ProductCard({
 }) {
     const [isHovered, setIsHovered] = useState(false);
 
-    // Use images[0] or fallback to imageUrl or a placeholder
-    const displayImage = (images && images.length > 0)
-        ? (images[0].startsWith('http') ? images[0] : `http://localhost:5000${images[0]}`)
-        : (imageUrl || 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop');
-
     const productId = _id || id;
+    const displayImage = (images && images.length > 0)
+        ? (images[0].startsWith('http') ? images[0] : `${IMAGE_BASE}${images[0]}`)
+        : 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop';
 
     return (
         <Link to={`/product/${productId}`}>

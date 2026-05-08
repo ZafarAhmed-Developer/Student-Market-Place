@@ -246,15 +246,15 @@ export default function AppLayout({ children }) {
         return data;
     };
 
-    const handleSignupSubmit = async (formData) => {
-        const data = await registerUser(
-            formData.firstName + (formData.lastName ? ' ' + formData.lastName : ''),
-            formData.email,
-            formData.password,
-            formData.campus || '',
-            formData.phone || ''
+    const handleSignupSubmit = async (data) => {
+        const result = await registerUser(
+            data.name,
+            data.email,
+            data.password,
+            data.campus || '',
+            data.phone || ''
         );
-        return data;
+        return result;
     };
 
     const handleAuthSuccess = (userData) => {

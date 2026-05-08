@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById, submitReview } from '../api';
+import { getProductById, submitReview, getSellerReviews, IMAGE_BASE } from '../api';
 
 export default function ProductDetailPage() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
+    const [reviews, setReviews] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showContactForm, setShowContactForm] = useState(false);
@@ -22,21 +23,27 @@ export default function ProductDetailPage() {
     const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     useEffect(() => {
-        const fetchProduct = async () => {
+        const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const data = await getProductById(id);
-                setProduct(data);
+                const productData = await getProductById(id);
+                setProduct(productData);
+                
+                if (productData.seller?._id) {
+                    const reviewData = await getSellerReviews(productData.seller._id);
+                    setReviews(reviewData);
+                }
+                
                 setError(null);
             } catch (err) {
-                console.error('Error fetching product:', err);
+                console.error('Error fetching data:', err);
                 setError('Product not found');
             } finally {
                 setIsLoading(false);
             }
         };
 
-        if (id) fetchProduct();
+        if (id) fetchData();
     }, [id]);
 
     const handleSendMessage = (e) => {
@@ -89,7 +96,7 @@ export default function ProductDetailPage() {
     }
 
     const images = product.images && product.images.length > 0 
-        ? product.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`)
+        ? product.images.map(img => img.startsWith('http') ? img : `${IMAGE_BASE}${img}`)
         : ['https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=600&h=500&fit=crop'];
 
     const sellerRating = product.seller?.rating || 5.0;
@@ -204,6 +211,38 @@ export default function ProductDetailPage() {
                                 <p className="text-gray-500 italic">
                                     {!currentUser ? 'Login to rate this seller.' : 'You cannot rate your own listing.'}
                                 </p>
+                            )}
+                        </div>
+
+                        {/* Reviews List */}
+                        <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Reviews</h2>
+                            {reviews.length > 0 ? (
+                                <div className="space-y-6">
+                                    {reviews.map((review) => (
+                                        <div key={review._id} className="border-b border-gray-100 pb-6 last:border-0">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                                                        {review.user?.name?.charAt(0) || 'U'}
+                                                    </div>
+                                                    <span className="font-bold text-gray-900">{review.user?.name || 'Anonymous'}</span>
+                                                </div>
+                                                <div className="flex text-yellow-400 text-xs">
+                                                    {[1, 2, 3, 4, 5].map((s) => (
+                                                        <span key={s}>{review.rating >= s ? '★' : '☆'}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-600 text-sm italic">"{review.comment}"</p>
+                                            <p className="text-gray-400 text-[10px] mt-2">
+                                                {new Date(review.createdAt).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 italic text-sm">No reviews yet for this seller.</p>
                             )}
                         </div>
                     </div>

@@ -1,10 +1,18 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Package, LogOut, ShoppingBag, Star, MapPin } from 'lucide-react';
+import { User, Package, LogOut, ShoppingBag, Star, MapPin, Edit2, Camera, Save, X } from 'lucide-react';
+import { updateProfile, IMAGE_BASE } from '../api';
 
 export default function ProfilePage() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({ name: '', phone: '', campus: '' });
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -15,6 +23,14 @@ export default function ProfilePage() {
         try {
             const userData = JSON.parse(storedUser);
             setUser(userData);
+            setEditData({
+                name: userData.name || '',
+                phone: userData.phone || '',
+                campus: userData.campus || ''
+            });
+            if (userData.avatar) {
+                setAvatarPreview(userData.avatar.startsWith('http') ? userData.avatar : `${IMAGE_BASE}${userData.avatar}`);
+            }
         } catch (e) {
             console.error('Failed to parse user from localStorage');
             localStorage.removeItem('user');
@@ -29,6 +45,30 @@ export default function ProfilePage() {
         window.location.reload();
     };
 
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setMessage({ type: '', text: '' });
+        try {
+            const updatedUser = await updateProfile(editData, avatarFile);
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setIsEditing(false);
+            setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        } catch (err) {
+            setMessage({ type: 'error', text: err.message || 'Failed to update profile' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     if (!user) return null;
 
     const displayName = user.name ? (user.name.charAt(0).toUpperCase() + user.name.slice(1)) : 'Student';
@@ -38,33 +78,132 @@ export default function ProfilePage() {
         <div className="min-h-screen bg-gray-50 py-10">
             <div className="container mx-auto px-4 md:px-8 max-w-4xl">
 
+                {message.text && (
+                    <div className={`mb-6 p-4 rounded-xl border ${message.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                        {message.text}
+                    </div>
+                )}
+
                 {/* Profile Header Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                     <div className="h-28 bg-gradient-to-r from-blue-600 to-blue-700" />
                     <div className="px-6 pb-6">
                         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12">
                             <div className="flex items-end gap-4">
-                                <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center text-3xl font-bold text-blue-600 bg-blue-50">
-                                    {initials}
+                                <div className="relative group">
+                                    <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-lg overflow-hidden flex items-center justify-center text-3xl font-bold text-blue-600 bg-blue-50">
+                                        {avatarPreview ? (
+                                            <img src={avatarPreview} alt={displayName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            initials
+                                        )}
+                                    </div>
+                                    {isEditing && (
+                                        <button
+                                            onClick={() => fileInputRef.current.click()}
+                                            className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"
+                                        >
+                                            <Camera size={24} />
+                                        </button>
+                                    )}
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleAvatarChange}
+                                        className="hidden"
+                                        accept="image/*"
+                                    />
                                 </div>
-                                <div className="pb-1">
-                                    <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
+                                <div className="pb-1 flex-1">
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            className="text-2xl font-bold text-gray-900 border-b border-blue-600 outline-none w-full bg-transparent"
+                                            value={editData.name}
+                                            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                        />
+                                    ) : (
+                                        <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
+                                    )}
                                     <p className="text-gray-500 text-sm flex items-center gap-1 mt-0.5">
-                                        <MapPin size={13} /> Student • Campus Marketplace
+                                        <MapPin size={13} /> Student • {user.campus || 'Campus Marketplace'}
                                     </p>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors self-start sm:self-auto"
-                            >
-                                <LogOut size={16} />
-                                Logout
-                            </button>
+                            <div className="flex gap-2 self-start sm:self-auto">
+                                {isEditing ? (
+                                    <>
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={isSaving}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                        >
+                                            <Save size={16} />
+                                            {isSaving ? 'Saving...' : 'Save'}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsEditing(false);
+                                                setAvatarPreview(user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${IMAGE_BASE}${user.avatar}`) : null);
+                                            }}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                        >
+                                            <X size={16} />
+                                            Cancel
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => setIsEditing(true)}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                                        >
+                                            <Edit2 size={16} />
+                                            Edit Profile
+                                        </button>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                                        >
+                                            <LogOut size={16} />
+                                            Logout
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="mt-5 flex items-center gap-1 text-sm text-gray-500">
-                            <span className="font-medium text-gray-700">{user.email}</span>
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Email Address</label>
+                                <p className="text-gray-700 font-medium">{user.email}</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">WhatsApp Number</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        className="text-gray-700 font-medium border-b border-blue-600 outline-none w-full bg-transparent"
+                                        value={editData.phone}
+                                        onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                                    />
+                                ) : (
+                                    <p className="text-gray-700 font-medium">{user.phone || 'Not set'}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Campus</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        className="text-gray-700 font-medium border-b border-blue-600 outline-none w-full bg-transparent"
+                                        value={editData.campus}
+                                        onChange={(e) => setEditData({ ...editData, campus: e.target.value })}
+                                    />
+                                ) : (
+                                    <p className="text-gray-700 font-medium">{user.campus || 'Not set'}</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

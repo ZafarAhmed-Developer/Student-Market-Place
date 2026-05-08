@@ -11,10 +11,10 @@ const userRoutes = require("./routes/users");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Middleware ────────────────────────────────────────────────────────────────
+// ── Middleware 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Vite dev server
+    origin: true,
     credentials: true,
   }),
 );

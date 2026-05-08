@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { EmptyState } from '../components/Utilities';
-import { getMyListings, deleteProduct } from '../api';
+import { getMyListings, deleteProduct, IMAGE_BASE } from '../api';
 
 export default function MyListingsPage() {
     const [listings, setListings] = useState([]);
@@ -104,7 +104,7 @@ export default function MyListingsPage() {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
                                             <img
-                                                src={listing.images?.[0] ? `http://localhost:5000${listing.images[0]}` : 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop'}
+                                                src={listing.images?.[0] ? `${IMAGE_BASE}${listing.images[0]}` : 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop'}
                                                 alt={listing.title}
                                                 className="w-12 h-12 rounded-lg object-cover"
                                             />
@@ -157,7 +157,7 @@ export default function MyListingsPage() {
                         <div key={listing._id || listing.id} className="bg-white rounded-lg shadow-md p-4">
                             <div className="flex gap-4 mb-4">
                                 <img
-                                    src={listing.images?.[0] ? `http://localhost:5000${listing.images[0]}` : 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop'}
+                                    src={listing.images?.[0] ? `${IMAGE_BASE}${listing.images[0]}` : 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?w=400&h=300&fit=crop'}
                                     alt={listing.title}
                                     className="w-20 h-20 rounded-lg object-cover"
                                 />
