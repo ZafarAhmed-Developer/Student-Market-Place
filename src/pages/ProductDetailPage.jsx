@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { allProducts } from './HomePage'; 
+// import { allProducts } from './HomePage'; 
 
 const allProducts = [
     {
@@ -30,16 +30,16 @@ const allProducts = [
 export default function ProductDetailPage() {
     const { id } = useParams();
 
-    
+
     const [showContactForm, setShowContactForm] = useState(false);
     const [showNumber, setShowNumber] = useState(false);
     const [contactMessage, setContactMessage] = useState("Hi, I'm interested in this item...");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    
+
     const product = allProducts.find(p => p.id.toString() === id?.toString());
 
-    
+
     if (!product) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
