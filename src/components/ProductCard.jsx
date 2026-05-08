@@ -99,7 +99,18 @@ export default function ProductCard({
                                     </span>
                                 </div>
                             </div>
-                            <button className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors">
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (seller?.phone) {
+                                        const phone = seller.phone.replace(/\D/g, '');
+                                        window.open(`https://wa.me/${phone}?text=Hi, I'm interested in: ${encodeURIComponent(title)}`, '_blank');
+                                    } else {
+                                        // If no phone, just navigate to detail page (handled by parent Link)
+                                    }
+                                }}
+                                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors z-10"
+                            >
                                 Contact
                             </button>
                         </div>
