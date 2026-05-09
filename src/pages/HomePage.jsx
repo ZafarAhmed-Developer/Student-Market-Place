@@ -78,7 +78,7 @@ export default function HomePage() {
                 <div className="container mx-auto px-4 md:px-8 text-center">
                     <h2 className="text-3xl font-bold text-gray-900 mb-4">Have items to sell?</h2>
                     <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-                        Join thousands of students selling their items on StudentHub. It's free and easy!
+                        Join thousands of students selling their items on Uni Market. It's free and easy!
                     </p>
                     <a
                         href="/sell"

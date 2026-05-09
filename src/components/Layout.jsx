@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, X, User } from "lucide-react";
 import { LoginForm, SignupForm } from "./AuthForms";
 import { loginUser, registerUser } from "../api";
+import logo from "../assets/logo.png";
 
 export function Header({ onOpenAuth, isAuthenticated }) {
 
@@ -11,11 +12,11 @@ export function Header({ onOpenAuth, isAuthenticated }) {
             <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">SM</span>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img src={logo} alt="Logo" className="w-full h-full object-contain" />
                     </div>
                     <span className="font-bold text-lg text-gray-900 hidden sm:block">
-                        Student Market Place
+                        Uni Market
                     </span>
                 </Link>
 
@@ -125,7 +126,10 @@ export function Footer() {
                 {/* Main Grid Section */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                     <div>
-                        <h3 className="font-bold text-lg text-gray-900 mb-4">StudentHub</h3>
+                        <div className="flex items-center gap-2 mb-4">
+                            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
+                            <h3 className="font-bold text-lg text-gray-900">Uni Market</h3>
+                        </div>
                         <p className="text-gray-600 text-sm leading-relaxed">
                             A trusted marketplace for students to buy and sell items within their campus community.
                         </p>
@@ -203,7 +207,7 @@ export function Footer() {
                 <div className="border-t border-gray-200 pt-8">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <p className="text-gray-600 text-sm">
-                            © {currentYear} StudentHub. All rights reserved.
+                            © {currentYear} Uni Market. All rights reserved.
                         </p>
                         <div className="flex gap-6">
                             <span className="text-gray-400 text-sm cursor-default">Privacy Policy</span>
