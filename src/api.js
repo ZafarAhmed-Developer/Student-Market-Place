@@ -1,6 +1,8 @@
 // Base URL of the backend API
-const API_BASE = "student-market-place-production.up.railway.app/api/v1";
-export const IMAGE_BASE = "student-market-place-production.up.railway.app";
+const API_BASE =
+  "https://student-market-place-production-012f.up.railway.app/api";
+export const IMAGE_BASE =
+  "https://student-market-place-production-012f.up.railway.app";
 
 // ── Helper: get auth token from localStorage ──────────────────────────────────
 const getToken = () => {
