@@ -13,9 +13,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Middleware 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://student-market-place-ten.vercel.app", // Replace with your actual Vercel URL
+  /\.vercel\.app$/, // Allows any Vercel preview deployment
+];
+
 app.use(
   cors({
-    origin: true,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.some((o) => (typeof o === "string" ? o === origin : o.test(origin)))) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
@@ -35,7 +49,7 @@ app.use("/api/user-sell-list", userSellListRoutes);
 
 // Health check
 app.get("/api/health", (req, res) =>
-  res.json({ status: "ok", time: new Date() }),
+  res.json({ status: "ok", time: new Date(), env: process.env.NODE_ENV }),
 );
 
 // 404 handler
@@ -49,19 +63,21 @@ app.use((err, req, res, next) => {
 
 // ── Connect to MongoDB and start server ───────────────────────────────────────
 const startServer = async () => {
+    console.log('⏳ Connecting to MongoDB...');
     try {
+        if (!process.env.MONGO_URI) {
+            throw new Error('MONGO_URI is not defined in environment variables');
+        }
         await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ MongoDB connected successfully');
     } catch (err) {
         console.error('❌ MongoDB connection error:', err.message);
-        console.log('⚠️ Server started without MongoDB connection. Some features will not work.');
-        console.log('👉 Please update your MONGO_URI in .env with a valid MongoDB Atlas string.');
+        console.log('⚠️ Server starting in degraded mode. Database features will fail.');
     }
 
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
-        console.log(`📦 API Base: http://localhost:${PORT}/api`);
-        console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+    app.listen(PORT, "0.0.0.0", () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`🏥 Health Check: /api/health`);
     });
 };
 

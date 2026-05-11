@@ -223,10 +223,22 @@ export function Footer() {
 // ============ MAIN APPLAYOUT COMPONENT ============
 export default function AppLayout({ children }) {
     const navigate = useNavigate();
+    // Safe helper to get user from localStorage
+    const getStoredUser = () => {
+        try {
+            const stored = localStorage.getItem('user');
+            return stored ? JSON.parse(stored) : null;
+        } catch (e) {
+            console.error("Corrupt user data in localStorage, clearing it.");
+            localStorage.removeItem('user');
+            return null;
+        }
+    };
+
     const [authModal, setAuthModal] = useState(null);
     const [redirectAfterAuth, setRedirectAfterAuth] = useState('/profile');
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('user'));
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || 'null'));
+    const [user, setUser] = useState(getStoredUser());
 
     // Open auth modal; optionally set where to redirect after success
     const openAuth = (mode, redirectTo = '/profile') => {

@@ -45,8 +45,14 @@ export default function ProfilePage() {
             } catch (err) {
                 console.error('Failed to fetch user data:', err);
                 // Fallback to local storage if server fails
-                const userData = JSON.parse(storedUser);
-                setUser(userData);
+                try {
+                    const userData = JSON.parse(storedUser);
+                    setUser(userData);
+                } catch (e) {
+                    console.error("Corrupt user data in localStorage, clearing it.");
+                    localStorage.removeItem('user');
+                    navigate('/');
+                }
             } finally {
                 setIsLoadingStats(false);
             }

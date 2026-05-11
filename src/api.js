@@ -1,13 +1,22 @@
 // Base URL of the backend API
 const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
   "https://student-market-place-production-012f.up.railway.app/api";
+
 export const IMAGE_BASE =
+  import.meta.env.VITE_IMAGE_BASE_URL ||
   "https://student-market-place-production-012f.up.railway.app";
 
 // ── Helper: get auth token from localStorage ──────────────────────────────────
 const getToken = () => {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  return user?.token || null;
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    return user?.token || null;
+  } catch (e) {
+    console.error("Corrupt user data in localStorage, clearing it.");
+    localStorage.removeItem("user");
+    return null;
+  }
 };
 
 // ── Helper: build headers ─────────────────────────────────────────────────────
