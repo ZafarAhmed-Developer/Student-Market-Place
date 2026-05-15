@@ -47,10 +47,26 @@ app.use("/api/products", productRoutes);
 app.use("/api/users", userProfileRoutes);
 app.use("/api/user-sell-list", userSellListRoutes);
 
+// Global variable to store last DB error for health check
+let lastDbError = null;
+
 // Health check
-app.get("/api/health", (req, res) =>
-  res.json({ status: "ok", time: new Date(), env: process.env.NODE_ENV }),
-);
+app.get("/api/health", (req, res) => {
+  const dbStatus = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  }[mongoose.connection.readyState] || "unknown";
+
+  res.json({
+    status: "ok",
+    database: dbStatus,
+    lastError: lastDbError ? lastDbError.message : "none",
+    time: new Date(),
+    env: process.env.NODE_ENV,
+  });
+});
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ message: "Route not found" }));
@@ -70,7 +86,9 @@ const startServer = async () => {
         }
         await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ MongoDB connected successfully');
+        lastDbError = null;
     } catch (err) {
+        lastDbError = err;
         console.error('❌ MongoDB connection error:', err.message);
         console.log('⚠️ Server starting in degraded mode. Database features will fail.');
     }
